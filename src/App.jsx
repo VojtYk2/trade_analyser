@@ -3,7 +3,6 @@ import './App.css'
 import cardData from './cards.json';
 import searchIcon from './assets/search.png';
 import trashIcon from './assets/trash.png';
-import addIcon from './assets/add.png';
 
 function TradeColumn(props) {
   const removeCard = (index) => {
@@ -13,31 +12,25 @@ function TradeColumn(props) {
 
   return (
     <div className="trade_column">
-      <div className='heading'>
-        <div className='titles'>
-          <h2>{props.title}</h2>
-          <h3>€{props.total}</h3>
+      <div className='titles'>
+        <h2>{props.title}</h2>
+        <h3>€{props.total}</h3>
+      </div>
+      { props.cards.length > 0 &&
+        <div className='cardListContainer'>
+          { props.cards.map((card, index) => {
+            return (
+              <div key={index} className='cardListDiv'>
+                <a key={index} className="cardList" href={card.link} target="_blank" rel="noreferer">
+                  <p>{card.name}</p>
+                  <p>€{card.price}</p>
+                </a>
+                <button className='removeButton' onClick={() => removeCard(index)} ><img src={trashIcon} alt="Remove" /></button>
+              </div>
+            );
+          })}
         </div>
-        <button onClick={() => {
-          props.setSearching(props.searching);
-          props.setIsSearching(true)
-          }}>
-            <img src={addIcon} alt="+" />
-        </button>
-      </div>
-      <div className='cardListContainer'>
-        { props.cards.map((card, index) => {
-          return (
-            <div key={index} className='cardListDiv'>
-              <a key={index} className="cardList" href={card.link} target="_blank" rel="noreferer">
-                <p>{card.name}</p>
-                <p>€{card.price}</p>
-              </a>
-              <button className='removeButton' onClick={() => removeCard(index)} ><img src={trashIcon} alt="Remove" /></button>
-            </div>
-          );
-        })}
-      </div>
+      }
     </div>
   )
 }
@@ -162,9 +155,23 @@ function App() {
   return (
     <div className="App">
       <h1>Trade Analyser</h1>
+      <div className='addButtons'>
+        <button onClick={() => {
+          setSearching('giving');
+          setIsSearching(true);
+          }}>
+          Give
+        </button>
+        <button onClick={() => {
+          setSearching('receiving');
+          setIsSearching(true);
+          }}>
+          Receive
+        </button>
+      </div>
       <div className="totals">
-        <TradeColumn title="I'm Giving" total={givingTotal} setTotal={setGivingTotal} cards={giving} setCards={setGiving} setIsSearching={setIsSearching} setSearching={setSearching} searching={'giving'} />
-        <TradeColumn title="I'm Receiving" total={receivingTotal} setTotal={setReceivingTotal} cards={receiving} setCards={setReceiving} setIsSearching={setIsSearching} setSearching={setSearching} searching={'receiving'} />
+        <TradeColumn title="I'm Giving" total={givingTotal} setTotal={setGivingTotal} cards={giving} setCards={setGiving} setIsSearching={setIsSearching} />
+        <TradeColumn title="I'm Receiving" total={receivingTotal} setTotal={setReceivingTotal} cards={receiving} setCards={setReceiving} setIsSearching={setIsSearching} />
       </div>
       { isSearching &&
       <div className='search-window-blur'>

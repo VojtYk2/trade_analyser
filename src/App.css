@@ -32,6 +32,21 @@ p {
   margin: 0;
 }
 
+.addButtons {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.addButtons button {
+  background-color: #333;
+  box-shadow:
+    0 1px 2px #ffffff70,
+    0 4px 6px #00000030,
+    0 6px 10px #00000015;
+}
+
 .totals {
   display: flex;
   flex-direction: column;
@@ -53,27 +68,6 @@ p {
     0 1px 2px #ffffff70,
     0 4px 6px #00000030,
     0 6px 10px #00000015;
-}
-
-.heading {
-  display: flex;
-  flex-direction: row;
-}
-
-.heading button {
-  width: 1.4rem;
-  height: 1.4rem;
-  margin: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 1rem;
-  background-color: #4d4d4d;
-}
-
-.heading img{
-  width: 0.7rem;
-  height: 0.7rem;
 }
 
 .titles {
