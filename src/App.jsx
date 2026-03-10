@@ -3,13 +3,27 @@ import './App.css'
 import cardData from './cards.json';
 import searchIcon from './assets/search.png';
 import trashIcon from './assets/trash.png';
+import addIcon from './assets/add.png';
 
 function TradeColumn(props) {
+  const removeCard = (index) => {
+    props.setTotal((prev) => prev - props.cards[index].price);
+    props.setCards(props.cards.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="trade_column">
-      <div className='titles'>
-        <h2>{props.title}</h2>
-        <p><b>€{props.value}</b></p>
+      <div className='heading'>
+        <div className='titles'>
+          <h2>{props.title}</h2>
+          <h3>€{props.total}</h3>
+        </div>
+        <button onClick={() => {
+          props.setSearching(props.searching);
+          props.setIsSearching(true)
+          }}>
+            <img src={addIcon} alt="+" />
+        </button>
       </div>
       <div className='cardListContainer'>
         { props.cards.map((card, index) => {
@@ -19,7 +33,7 @@ function TradeColumn(props) {
                 <p>{card.name}</p>
                 <p>€{card.price}</p>
               </a>
-              <button className='removeButton'><img src={trashIcon} alt="Remove" /></button>
+              <button className='removeButton' onClick={() => removeCard(index)} ><img src={trashIcon} alt="Remove" /></button>
             </div>
           );
         })}
@@ -29,14 +43,23 @@ function TradeColumn(props) {
 }
 
 function Buttons(props) {
-  const setGiving = async () => {
+  const addCard = () => {
+    if(props.searching === 'giving') {
+      setGiving();
+    }
+    else if(props.searching === 'receiving') {
+      setReceiving();
+    }
+  }
+
+  const setGiving = () => {
     const card = { name: props.card.name, price: props.card.price, link: props.card.link };
     props.setGivingTotal((prev) => prev + card.price);
     props.setGiving([...props.giving, card]);
     props.setIsSearching(false);
   }
 
-  const setReceiving = async () => {
+  const setReceiving = () => {
     const card = { name: props.card.name, price: props.card.price, link: props.card.link };
     props.setReceivingTotal((prev) => prev + card.price);
     props.setReceiving([...props.receiving, card]);
@@ -45,8 +68,7 @@ function Buttons(props) {
 
   return (
     <div className="buttons">
-      <button onClick={setGiving}>Give</button>
-      <button onClick={setReceiving}>Receive</button>
+      <button onClick={addCard}>Add</button>
     </div>
   )
 }
@@ -93,9 +115,8 @@ function SearchBar(props) {
     <div className="search-container">
       <label className="search-bar" onClick={() => props.setIsSearching(true)}>
         <img src={searchIcon} alt="Search" className="search-icon" />
-        <input type="text" autoFocus={props.isSearching} onChange={search} placeholder="Search cards..." />
+        <input type="text" onChange={search} placeholder="Search cards..." />
       </label>
-      { props.search &&
       <div className='search-results'>
         {searchResults.map((element, index) => {
           return (
@@ -106,15 +127,19 @@ function SearchBar(props) {
               <p>{element.number}</p>
               { selectedCard === element.id &&
                 <Buttons
-                  givingTotal={props.givingTotal}
-                  setGivingTotal={props.setGivingTotal}
-                  receivingTotal={props.receivingTotal}
-                  setReceivingTotal={props.setReceivingTotal}
+                  searching={props.searching}
                   setIsSearching={props.setIsSearching}
+
                   giving={props.giving}
                   setGiving={props.setGiving}
+                  givingTotal={props.givingTotal}
+                  setGivingTotal={props.setGivingTotal}
+
                   receiving={props.receiving}
                   setReceiving={props.setReceiving}
+                  receivingTotal={props.receivingTotal}
+                  setReceivingTotal={props.setReceivingTotal}
+
                   card={element}
                 />
               }
@@ -122,44 +147,43 @@ function SearchBar(props) {
           );
         })}
       </div>
-      }
     </div>
   )
 }
 
 function App() {
-  const [givingTotal, setGivingTotal] = useState(0)
+  const [givingTotal, setGivingTotal] = useState(100)
   const [receivingTotal, setReceivingTotal] = useState(0)
   const [isSearching, setIsSearching] = useState(false)
+  const [searching, setSearching] = useState('');
   const [giving, setGiving] = useState([{name: 'Charizard', price: 100, link: 'https://www.cardmarket.com/en/Pokemon/Products/Singles/SwSh-Chilling-Reign/Charizard-SSR'}]);
   const [receiving, setReceiving] = useState([]);
 
   return (
     <div className="App">
       <h1>Trade Analyser</h1>
-      <div className="search">
-        <SearchBar setIsSearching={setIsSearching} isSearching={isSearching} search={false} />
-      </div>
       <div className="totals">
-        <TradeColumn title="I'm Giving" value={givingTotal} cards={giving} />
-        <TradeColumn title="I'm Receiving" value={receivingTotal} cards={receiving} />
+        <TradeColumn title="I'm Giving" total={givingTotal} setTotal={setGivingTotal} cards={giving} setCards={setGiving} setIsSearching={setIsSearching} setSearching={setSearching} searching={'giving'} />
+        <TradeColumn title="I'm Receiving" total={receivingTotal} setTotal={setReceivingTotal} cards={receiving} setCards={setReceiving} setIsSearching={setIsSearching} setSearching={setSearching} searching={'receiving'} />
       </div>
       { isSearching &&
       <div className='search-window-blur'>
         <div className='exit' onClick={() => setIsSearching(false)}></div>
         <div className='search-window'>
           <SearchBar
-            setIsSearching={setIsSearching}
+            searching={searching}
             isSearching={isSearching}
-            search={true}
-            givingTotal={givingTotal}
-            setGivingTotal={setGivingTotal}
-            receivingTotal={receivingTotal}
-            setReceivingTotal={setReceivingTotal}
+            setIsSearching={setIsSearching}
+
             giving={giving}
             setGiving={setGiving}
+            givingTotal={givingTotal}
+            setGivingTotal={setGivingTotal}
+
             receiving={receiving}
             setReceiving={setReceiving}
+            receivingTotal={receivingTotal}
+            setReceivingTotal={setReceivingTotal}
           />
         </div>
       </div>
