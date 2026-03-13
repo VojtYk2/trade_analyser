@@ -3,6 +3,7 @@ import './App.css'
 import cardData from './cards.json';
 import searchIcon from './assets/search.png';
 import trashIcon from './assets/trash.png';
+import cashIcon from './assets/cash.png';
 
 function TradeColumn(props) {
   const removeCard = (index) => {
@@ -14,7 +15,7 @@ function TradeColumn(props) {
     <div className="trade_column">
       <div className='titles'>
         <h2>{props.title}</h2>
-        <h3>€{props.total}</h3>
+        <h3 className={props.total === props.otherTotal ? 'white' : props.total > props.otherTotal ? 'green' : 'red'}>€{props.total}</h3>
       </div>
       { props.cards.length > 0 &&
         <div className='cardListContainer'>
@@ -46,6 +47,7 @@ function Buttons(props) {
   }
 
   const setGiving = () => {
+    document.activeElement.blur();
     const card = { name: props.card.name, price: props.card.price, link: props.card.link };
     props.setGivingTotal((prev) => prev + card.price);
     props.setGiving([...props.giving, card]);
@@ -53,6 +55,7 @@ function Buttons(props) {
   }
 
   const setReceiving = () => {
+    document.activeElement.blur();
     const card = { name: props.card.name, price: props.card.price, link: props.card.link };
     props.setReceivingTotal((prev) => prev + card.price);
     props.setReceiving([...props.receiving, card]);
@@ -74,10 +77,10 @@ function SearchBar(props) {
   const search = async (e) => {
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
-
       const text = e.target.value;
       if(text.length > 3) {
-        const request = await fetch(`https://cardmarket-api-tcg.p.rapidapi.com/pokemon/cards/search?search=${text}&rapidapi-key=${import.meta.env.VITE_RAPIDAPI_KEY}&sort=relevance`);
+        const request = await fetch(`http://localhost:5000/search?text=${text}`);
+
         const response = await request.json();
 
         /* const response = cardData */
@@ -86,13 +89,16 @@ function SearchBar(props) {
           return {
             id: index,
             name: element.name,
-            setName: element.episode.name,
+            setName: element.episode.code,
             number: element.card_number,
+            setTotal: element.episode.cards_printed_total,
             img: element.image,
             price: element.prices?.cardmarket?.lowest_near_mint ?? 0,
             link: element.links.cardmarket
           };
         }));
+
+        document.activeElement.blur();
       }
       else {
         setSearchResults([]);
@@ -105,20 +111,21 @@ function SearchBar(props) {
   };
 
   return (
-    <div className="search-container">
-      <label className="search-bar" onClick={() => props.setIsSearching(true)}>
-        <img src={searchIcon} alt="Search" className="search-icon" />
-        <input type="text" onChange={search} placeholder="Search cards..." />
-      </label>
+    <div className="search-window">
+      <div className='searchBarContainer'>
+        <label className="search-bar" onClick={() => props.setIsSearching(true)}>
+          <img src={searchIcon} alt="Search" className="search-icon" />
+          <input type="text" onChange={search} placeholder="Search cards..." />
+        </label>
+      </div>
       <div className='search-results'>
         {searchResults.map((element, index) => {
           return (
-            <div key={index} className={`card card-${element.id}`} onClick={() => showButtons(element.id)}>
+            <div key={index} className={`card card-${element.id}`} onClick={() => showButtons(element.id)} >
               <img src={element.img} alt={element.name} />
-              <h3>{element.name}</h3>
-              <p>{element.setName}</p>
-              <p>{element.number}</p>
-              { selectedCard === element.id &&
+              <div className='card-content'>
+                <h3>{element.name}</h3>
+                <p>{element.setName} - {element.number}/{element.setTotal}</p>
                 <Buttons
                   searching={props.searching}
                   setIsSearching={props.setIsSearching}
@@ -135,7 +142,7 @@ function SearchBar(props) {
 
                   card={element}
                 />
-              }
+              </div>
             </div>
           );
         })}
@@ -145,38 +152,64 @@ function SearchBar(props) {
 }
 
 function App() {
-  const [givingTotal, setGivingTotal] = useState(100)
+  const [givingTotal, setGivingTotal] = useState(0)
   const [receivingTotal, setReceivingTotal] = useState(0)
   const [isSearching, setIsSearching] = useState(false)
   const [searching, setSearching] = useState('');
-  const [giving, setGiving] = useState([{name: 'Charizard', price: 100, link: 'https://www.cardmarket.com/en/Pokemon/Products/Singles/SwSh-Chilling-Reign/Charizard-SSR'}]);
+  const [giving, setGiving] = useState([]);
   const [receiving, setReceiving] = useState([]);
 
   return (
     <div className="App">
       <h1>Trade Analyser</h1>
-      <div className='addButtons'>
-        <button onClick={() => {
-          setSearching('giving');
-          setIsSearching(true);
+      <div className='body'>
+        <div className='addButtons'>
+          <button onClick={() => {
+            setSearching('giving');
+            setIsSearching(true);
+            }}>
+            Give
+          </button>
+          <button onClick={() => {
+            setSearching('receiving');
+            setIsSearching(true);
+            }}>
+            Receive
+          </button>
+        </div>
+        <div className="totals">
+          <TradeColumn
+            title="I'm Giving"
+
+            total={givingTotal}
+            setTotal={setGivingTotal}
+            otherTotal={receivingTotal}
+
+            cards={giving}
+            setCards={setGiving}
+
+            setIsSearching={setIsSearching}
+          />
+          <TradeColumn
+            title="I'm Receiving"
+
+            total={receivingTotal}
+            setTotal={setReceivingTotal}
+            otherTotal={givingTotal}
+
+            cards={receiving}
+            setCards={setReceiving}
+
+            setIsSearching={setIsSearching}
+          />
+        </div>
+        { isSearching &&
+        <div className='search-window-blur'>
+          <div className='exit' onClick={() => {
+            document.activeElement.blur();
+            setIsSearching(false);
           }}>
-          Give
-        </button>
-        <button onClick={() => {
-          setSearching('receiving');
-          setIsSearching(true);
-          }}>
-          Receive
-        </button>
-      </div>
-      <div className="totals">
-        <TradeColumn title="I'm Giving" total={givingTotal} setTotal={setGivingTotal} cards={giving} setCards={setGiving} setIsSearching={setIsSearching} />
-        <TradeColumn title="I'm Receiving" total={receivingTotal} setTotal={setReceivingTotal} cards={receiving} setCards={setReceiving} setIsSearching={setIsSearching} />
-      </div>
-      { isSearching &&
-      <div className='search-window-blur'>
-        <div className='exit' onClick={() => setIsSearching(false)}></div>
-        <div className='search-window'>
+          </div>
           <SearchBar
             searching={searching}
             isSearching={isSearching}
@@ -193,8 +226,8 @@ function App() {
             setReceivingTotal={setReceivingTotal}
           />
         </div>
+        }
       </div>
-      }
     </div>
   )
 }
