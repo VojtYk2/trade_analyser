@@ -79,7 +79,7 @@ function SearchBar(props) {
     timer.current = setTimeout(async () => {
       const text = e.target.value;
       if(text.length > 3) {
-        const request = await fetch(`http://localhost:5000/search?text=${text}`);
+        const request = await fetch(`/search?text=${text}`);
 
         const response = await request.json();
 

@@ -1,14 +1,18 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 import requests
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='dist', static_url_path='')
 CORS(app)
 load_dotenv()
 
 RAPIDAPI_KEY = os.getenv('RAPIDAPI_KEY')
+
+@app.route('/')
+def index():
+    return send_from_directory('dist', 'index.html')
 
 @app.route('/search')
 def search():
